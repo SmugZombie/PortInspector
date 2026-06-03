@@ -91,14 +91,20 @@ cp -R "$EXPORTED_APP" "$APP"
 ok "Exported: $APP"
 
 # ── Re-sign (ensure identity is applied to all nested binaries) ────────────────
+# Always embed entitlements — without them the app-sandbox flag is ambiguous and
+# macOS may apply unexpected restrictions on the spawned lsof/ps subprocesses.
 step "Code-signing"
+ENTITLEMENTS="${PWD}/PortInspector/PortInspector.entitlements"
 if [[ "$SIGN_IDENTITY" == "-" ]]; then
-  codesign --force --deep --sign - "$APP"
+  codesign --force --deep \
+    --sign - \
+    --entitlements "$ENTITLEMENTS" \
+    "$APP"
   ok "Ad-hoc signed (local use only)"
 else
   codesign --force --deep \
     --sign "$SIGN_IDENTITY" \
-    --entitlements "${PWD}/PortInspector/PortInspector.entitlements" \
+    --entitlements "$ENTITLEMENTS" \
     --options runtime \
     "$APP"
   ok "Signed with: $SIGN_IDENTITY"
