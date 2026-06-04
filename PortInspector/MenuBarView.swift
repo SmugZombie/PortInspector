@@ -79,23 +79,28 @@ struct MenuBarView: View {
 
     // MARK: - List
 
+    @ViewBuilder
     private var portList: some View {
-        Group {
-            if let error = scanner.errorMessage {
-                errorView(error)
-            } else if scanner.entries.isEmpty && !scanner.isScanning {
-                emptyView
-            } else {
-                ScrollView {
-                    LazyVStack(spacing: 0) {
-                        columnHeader
-                        ForEach(scanner.entries) { entry in
-                            PortRowView(entry: entry)
-                        }
+        if let error = scanner.errorMessage {
+            errorView(error)
+        } else if scanner.entries.isEmpty && !scanner.isScanning {
+            emptyView
+        } else {
+            // VStack (not LazyVStack): LazyVStack only renders visible rows but needs
+            // the ScrollView to already have a height to decide what's "visible" — a
+            // chicken-and-egg that collapses the scroll area to zero on some macOS versions.
+            // Port lists are small enough that eager rendering is fine.
+            ScrollView {
+                VStack(spacing: 0) {
+                    columnHeader
+                    ForEach(scanner.entries) { entry in
+                        PortRowView(entry: entry)
                     }
                 }
-                .frame(maxHeight: 460)
             }
+            // minHeight ensures the scroll area is always visible even before the first
+            // scan completes; maxHeight caps the popover from growing too tall.
+            .frame(minHeight: 60, maxHeight: 460)
         }
     }
 

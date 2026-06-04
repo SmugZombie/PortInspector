@@ -23,7 +23,9 @@ enum PortState: String, Hashable {
 }
 
 struct PortEntry: Identifiable, Hashable {
-    let id = UUID()
+    // Stable identity across refreshes — ForEach uses this to diff rows.
+    // Random UUID() would give every entry a new ID on each scan, breaking LazyVStack.
+    var id: String { "\(proto)|\(port)|\(pid)" }
     let proto: String
     let port: Int
     let state: PortState
